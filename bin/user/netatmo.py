@@ -179,7 +179,7 @@ class NetatmoDriver(weewx.drivers.AbstractDevice):
         elif mode.lower() == 'cloud':
             max_tries = int(stn_dict.get('max_tries', 5))
             retry_wait = int(stn_dict.get('retry_wait', 10))  # seconds
-            poll_interval = int(stn_dict.get('poll_interval', 300))  # seconds
+            poll_interval = int(stn_dict.get('poll_interval', 600))  # seconds
             tokens_persistence_file = stn_dict['tokens_persistence_file']
             client_id = stn_dict['client_id']
             client_secret = stn_dict['client_secret']
