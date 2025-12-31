@@ -24,7 +24,7 @@ class NetatmoInstaller(ExtensionInstaller):
                     'tokens_persistence_file': 'INSERT_PATH_TO_TOKEN_FILE_HERE',
                     'driver': 'user.netatmo',
                     'mode': 'cloud',
-                    ' # poll_interval': 'derzeit nur in netatmo.y einstellbar Zeile 182',
+                    'poll_interval': 'derzeit nur in netatmo.y einstellbar Zeile 182',
                 }
             },
             files=[('bin/user', ['bin/user/netatmo.py'])]
