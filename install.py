@@ -24,8 +24,8 @@ class NetatmoInstaller(ExtensionInstaller):
                     'tokens_persistence_file': 'INSERT_PATH_TO_TOKEN_FILE_HERE',
                     'driver': 'user.netatmo',
                     'mode': 'cloud',
-                    # Poll interval can currently only be changed directly in the driver [./bin/user/netatmo.py] in line 182.
-                    'poll_interval': "600",
+                    '# Poll interval can currently only be changed directly in the driver [./bin/user/netatmo.py] in line 182'
+                    '# poll_interval': "600",
                 }
             },
             files=[('bin/user', ['bin/user/netatmo.py'])]
