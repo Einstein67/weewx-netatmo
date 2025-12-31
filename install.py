@@ -19,11 +19,12 @@ class NetatmoInstaller(ExtensionInstaller):
             author_email="mwall@users.sourceforge.net",
             config={
                 'netatmo': {
-                    'username': 'INSERT_USERNAME_HERE',
-                    'password': 'INSERT_PASSWORD_HERE',
                     'client_id': 'INSERT_CLIENT_ID_HERE',
                     'client_secret': 'INSERT_CLIENT_SECRET_HERE',
+                    'tokens_persistence_file': 'INSERT_PATH_TO_TOKEN_FILE_HERE',
                     'driver': 'user.netatmo',
+                    'mode': 'cloud',
+                    'poll_interval': "600"
                 }
             },
             files=[('bin/user', ['bin/user/netatmo.py'])]
