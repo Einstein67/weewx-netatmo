@@ -25,7 +25,7 @@ class NetatmoInstaller(ExtensionInstaller):
                     'driver': 'user.netatmo',
                     'mode': 'cloud',
                     'poll_interval': '600',
-                    'Test Text'
+                    'Test Text':
                 }
             },
             files=[('bin/user', ['bin/user/netatmo.py'])]
