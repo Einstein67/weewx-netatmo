@@ -25,8 +25,11 @@ class NetatmoInstaller(ExtensionInstaller):
                     'driver': 'user.netatmo',
                     'mode': 'cloud',
                     'poll_interval': '600',
-                    'Test Text':
                 }
+            print("""
+                # Netatmo cloud polling interval in seconds
+                # Default: 600
+            """, file=fp)
             },
             files=[('bin/user', ['bin/user/netatmo.py'])]
         )
