@@ -25,7 +25,7 @@ class NetatmoInstaller(ExtensionInstaller):
                     'driver': 'user.netatmo',
                     'mode': 'cloud',
                     '# poll_interval': "600",
-                    '# Poll interval can currently only be changed directly in the driver [./bin/user/netatmo.py] in line 182'
+                    '# Poll interval can currently only be changed directly in the driver [./bin/user/netatmo.py] in line 182,
                 }
             },
             files=[('bin/user', ['bin/user/netatmo.py'])]
