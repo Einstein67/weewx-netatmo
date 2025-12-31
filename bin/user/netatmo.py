@@ -204,9 +204,9 @@ class NetatmoDriver(weewx.drivers.AbstractDevice):
         while True:
             try:
                 data = self.collector.queue.get(True, 10)
-                logdbg('data: %s' % data)
+                #logdbg('data: %s' % data)
                 pkt = self.data_to_packet(data)
-                logdbg('packet: %s' % pkt)
+                #logdbg('packet: %s' % pkt)
                 if pkt:
                     yield pkt
             except Queue.Empty:
@@ -347,8 +347,6 @@ class CloudClient(Collector):
                             urllib.error.URLError if pvers == 3 else urllib2.URLError) as e:
                         logerr("failed attempt %s of %s to get data: %s" %
                                (tries + 1, self._max_tries, e))
-                        logdbg("waiting %s seconds before retry" %
-                               self._retry_wait)
                         time.sleep(self._retry_wait)
                     except Exception as e:
                         logerr("exception in netatmo-client: %s" % e)
@@ -357,7 +355,7 @@ class CloudClient(Collector):
                     logerr("failed to get data after %d attempts" %
                            self._max_tries)
                 last_poll = now
-                logdbg('next update in %s seconds' % self._poll_interval)
+                loginf('next update in %s seconds' % self._poll_interval)
             time.sleep(1)
 
     @staticmethod
@@ -366,55 +364,45 @@ class CloudClient(Collector):
         raw_data = sd.get_data(device_id)
         units_dict = dict((x, raw_data['user']['administrative'][x])
                           for x in CloudClient.UNITS)
-        logdbg('cloud units: %s' % units_dict)
-        # i would prefer to do partial packets, but there is no guarantee that
-        # the timestamps will not align.  so aggregate into a single packet,
-        # and let the driver figure out what timestamp it wants to put on it.
-        alldata = dict()  # single dict with all devices and modules
+        # logdbg('cloud units: %s' % units_dict)
+
+        alldata = dict()
         for d in raw_data['devices']:
             data = CloudClient.extract_data(d, units_dict)
             data = CloudClient.apply_labels(data, d['_id'], d['type'])
             alldata.update(data)
-            # Collector.queue.put(data)
             for m in d['modules']:
                 data = CloudClient.extract_data(m, units_dict)
                 if m['type'] == 'NAModule3' and data.get('time_utc', None):
-                    # is it rain Module and was the time returned?
                     curr_station = d['_id']
                     if not curr_station in gm_info:
                         gm_info[curr_station] = {'module': m['_id'], 'type': m['type'], 'lastp': 0, 'lasta': 0}
                         print('Found Rain Module %s for correction' % gm_info[curr_station]['module'])
-                    actrain = data['time_utc']  # actual time of measurement
-                    if gm_info[curr_station]['lastp'] == actrain:  # remove rain data if already posted
-                        data['Rain'] = 0.0  # data already written, reset/set to zero
-                        logdbg('Duplicate detected. Modified rain to 0.0')
-                    gm_info[curr_station]['lastp'] = actrain  # save last posted raindata time
+                    actrain = data['time_utc']
+                    if gm_info[curr_station]['lastp'] == actrain:
+                        data['Rain'] = 0.0
+                    gm_info[curr_station]['lastp'] = actrain
                 data = CloudClient.apply_labels(data, m['_id'], m['type'])
                 alldata.update(data)
 
-        # Collector.queue.put(alldata)
-        """Query the server for rain data with getmeasurement."""
         for station in gm_info:
             rain_data = gm.get_data(station, gm_info[station]['module'])
-            logdbg('getmeasurement Resp: %s' % rain_data)
+            # logdbg('getmeasurement Resp: %s' % rain_data)
             rain_data_times = [int(x) for x in rain_data.keys()]
             rain_data_times.sort(reverse=True)
 
             if len(rain_data_times) > 1 and len(rain_data[str(rain_data_times[1])]) != 0:
-                if rain_data_times[0] == gm_info[station]['lastp']:  # last measurement is the same time, OK
-                    if rain_data_times[1] == gm_info[station]['lasta']:  # data already written?
-                        pass  # yes, do nothing
-                    else:  # no, prepare for adding rain amount
-                        # Rain Data is statically converted from mm -> cm (as WEEWX needs it) by multiplying with 0.1
-                        # add the additional rain data to the entry "Rain" in collected data
+                if rain_data_times[0] == gm_info[station]['lastp']:
+                    if rain_data_times[1] == gm_info[station]['lasta']:
+                        pass
+                    else:
                         rainindex = gm_info[station]['module'] + "." + gm_info[station]['type'] + ".Rain"
-                        logdbg('Modified rain data for %s' % rainindex)
                         alldata[rainindex] += (rain_data[str(rain_data_times[1])][0]) * 0.1
-                        gm_info[station]['lasta'] = rain_data_times[1]  # save last written date
+                        gm_info[station]['lasta'] = rain_data_times[1]
             else:
                 print("Lacking data for rain fix. Skipping.")
-        logdbg('Alldata: %s' % alldata)
-        Collector.queue.put(alldata)  # now write the modified record
+        # logdbg('Alldata: %s' % alldata)
+        Collector.queue.put(alldata)
 
     @staticmethod
     def extract_data(x, units_dict):
@@ -614,22 +602,20 @@ class CloudClient(Collector):
 
     @staticmethod
     def post_request(url, params, headers=None):
-        # netatmo response body size is limited to 64K
         url = CloudClient.NETATMO_URL + url
         params = urlencode(params).encode("utf-8")
         if headers is None:
             headers = {}
         headers.update({
             "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"})
-        logdbg("url: %s data: %s hdr: %s" % (url, params, headers))
+        # logdbg("url: %s data: %s hdr: %s" % (url, params, headers))
         req = urllib.request.Request(url=url, data=params, headers=headers) if pvers == 3 else \
             urllib2.Request(url=url, data=params, headers=headers)
         resp = urllib.request.urlopen(req).read(65535) if pvers == 3 else \
             urllib2.urlopen(req).read(65535)
         resp_obj = json.loads(resp)
-        logdbg("resp_obj: %s" % resp_obj)
+        # logdbg("resp_obj: %s" % resp_obj)
         return resp_obj
-
 
 class PacketSniffer(Collector):
     """listen for incoming packets then parse them.  put result on queue."""
@@ -641,8 +627,8 @@ class PacketSniffer(Collector):
         pass
 
     class Packet(object):
-        _HDR = re.compile('(\d+).(\d+) IP (\S+) > (\S+):')
-        _DATA = re.compile('0x00\d0: (.*)')
+        _HDR = re.compile(r'(\d+).(\d+) IP (\S+) > (\S+):')
+        _DATA = re.compile(r'0x00\d0: (.*)')
 
         def lines2packets(lines):
             pkts = []
